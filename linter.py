@@ -74,4 +74,5 @@ class Scalastyle(Linter):
         if path.isfile(path.join(file_path, file_name)):
             return path.join(file_path, file_name)
         else:
-            raise FileNotFoundError("Couldn't locate {} in {} or parent directories".format(file_name, file))
+            raise FileNotFoundError("Couldn't locate {} in {} or parent directories"
+                                    .format(file_name, self.settings.context['file_path']))
