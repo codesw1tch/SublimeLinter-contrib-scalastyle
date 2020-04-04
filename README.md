@@ -9,13 +9,14 @@ This linter plugin for [SublimeLinter][docs] provides an interface to
 syntax.
 
 ## Installation
-SublimeLinter 3 must be installed in order to use this plugin. If SublimeLinter
-3 is not installed, please follow the instructions [here][installation].
+SublimeLinter 4 must be installed in order to use this plugin. If SublimeLinter
+4 is not installed, please follow the instructions [here][installation].
 
 ### Linter installation
 Before using this plugin, you must ensure that `scalastyle` is installed on
 your system. `scalastyle` is available as an executable `jar` file, which can
-be downloaded [here][scalastyle-download].
+be downloaded [here][scalastyle-download]. Be sure to download the batch version
+of `scalastyle`.
 
 ### Linter configuration
 In order for `scalastyle` to be executed by SublimeLinter, you must ensure that
@@ -57,13 +58,25 @@ SublimeLinter-contrib-scalastyle provides its own settings.
 |:------|:---|:----------|
 |jar_file|`str`|The path to the `scalastyle` `jar` file.|
 
+`jar_file` must be set for the plugin to work. Please add it to the SublimeLinter
+settings like so:
+```json
+"linters": {
+  "scalastyle": {
+    "jar_file": "/path/to/scalastyle.jar"
+  }
+}
+```
+
 By default, the linter plugin looks for a file called `scalastyle-config.xml`
 in the current directory and its parents. To override the config file path, you
-would add this to the linter settings:
+would add this to the SublimeLinter settings:
 
 ```json
-"scalastyle": {
-    "args": ["--config", "path/to/config.xml"]
+"linters" {
+  "scalastyle": {
+    "config": "/path/to/config.xml"
+  }
 }
 ```
 
