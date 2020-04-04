@@ -10,19 +10,14 @@
 
 """This module exports the Scalastyle plugin class."""
 
-from os import path
-from SublimeLinter.lint import Linter, util
+from SublimeLinter.lint import Linter
+from os import listdir, path
 
 
 class Scalastyle(Linter):
-
     """Provides an interface to scalastyle."""
 
-    syntax = 'scala'
-    executable = 'java'
     cmd = None
-    config_file = ('--config', 'scalastyle-config.xml')
-
     regex = (
         r'^(?:(?P<error>error)|(?P<warning>warning))'
         r'(?: file=(?P<file>.+?))'
@@ -30,54 +25,30 @@ class Scalastyle(Linter):
         r'(?: line=(?P<line>\d+))?'
         r'(?: column=(?P<col>\d+))?$'
     )
-
     multiline = False
-    line_col_base = (1, 0)
-    tempfile_suffix = 'scala'
-    error_stream = util.STREAM_BOTH
-    word_re = r'^(\w+|([\'"]).+?\2)'
     defaults = {
-        'jar_file': ''
+        'selector': 'source.scala'
     }
-    inline_settings = None
-    inline_overrides = None
-    comment_re = None
+    line_col_base = (1, 0)
+    word_re = r'^(\w+|([\'"]).+?\2)'
 
     def cmd(self):
-        """Return the command line to execute."""
+        """Return the command to execute."""
 
-        jar_file = self.get_jarfile_path()
-
-        return [self.executable_path, '-jar', jar_file]
-
-    def get_jarfile_path(self):
-        """
-        Return the absolute path to the scalastyle jar file.
-
-        Expand user shortcut (~) and environment variables.
-
-        """
-
-        settings = self.get_view_settings()
-        jar_file = settings.get('jar_file')
-
-        # Expand user directory shortcuts
-        jar_file = path.expanduser(jar_file)
-
-        # Expand environment variables
-        jar_file = path.expandvars(jar_file)
-
-        # Get canonical path
-        jar_file = path.realpath(jar_file)
-
-        return jar_file
+        return [
+            'java',
+            '-jar',
+            self.settings['jar_file'],
+            '${file}',
+            '--config',
+            self._get_config()
+        ]
 
     def split_match(self, match):
         """
         Return the components of the match.
 
         We override this method so that errors with no line number can be displayed.
-
         """
 
         match, line, col, error, warning, message, near = super().split_match(match)
@@ -86,3 +57,21 @@ class Scalastyle(Linter):
             line = 0
 
         return match, line, col, error, warning, message, near
+
+    def _get_config(self):
+        # Return the scalastyle-config.xml config path
+
+        return self.settings['config'] if self.settings.has('config') else self._find_config()
+
+    def _find_config(self):
+        # Look for scalastyle-config.xml in file's directory and parent directories
+
+        file_name = 'scalastyle-config.xml'
+        file_path = self.settings.context['file_path']
+        while file_path != "/" and file_name not in listdir(file_path):
+            file_path = path.abspath(file_path + "/../")
+
+        if path.isfile(path.join(file_path, file_name)):
+            return path.join(file_path, file_name)
+        else:
+            raise FileNotFoundError("Couldn't locate {} in {} or parent directories".format(file_name, file))
